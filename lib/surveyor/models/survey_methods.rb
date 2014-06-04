@@ -5,12 +5,12 @@ module Surveyor
     module SurveyMethods
       def self.included(base)
         # Associations
-        base.send :has_many, :sections, :class_name => "SurveySection", :order => 'display_order', :dependent => :destroy
-        base.send :has_many, :sections_with_questions, :include => :questions, :class_name => "SurveySection", :order => 'display_order'
+        base.send :has_many, :sections, -> { order('display_order') }, :class_name => "SurveySection", :dependent => :destroy
+        base.send :has_many, :sections_with_questions, -> { includes(:questions).order('display_order') }, :class_name => "SurveySection"
         base.send :has_many, :response_sets
 
         # Scopes
-        base.send :scope, :with_sections, {:include => :sections}
+        base.send :scope, :with_sections, -> { base.includes(:sections) }
         base.scope :by_user, lambda { |user| base.select('DISTINCT surveys.*').joins(:response_sets).where(:response_sets => {:user_id => user.nil? ? nil :user.id} )}
         
         @@validations_already_included ||= nil

@@ -42,7 +42,7 @@ module Surveyor
     end
 
     def edit
-      @response_set = ResponseSet.find_by_access_code(params[:response_set_code], :include => {:responses => [:question, :answer]})
+      @response_set = ResponseSet.includes({:responses => [:question, :answer]}).find_by_access_code(params[:response_set_code])
       if @response_set
         @survey = Survey.with_sections.find_by_id(@response_set.survey_id)
         @sections = @survey.sections
@@ -62,7 +62,7 @@ module Surveyor
       saved = false
       @errors = []
       ActiveRecord::Base.transaction do
-        @response_set = ResponseSet.find_by_access_code(params[:response_set_code], :include => {:responses => :answer}, :lock => true)
+        @response_set = ResponseSet.includes({:responses => :answer}).lock.find_by_access_code(params[:response_set_code])
         unless @response_set.blank?
 
           params[:r].each do |res| 

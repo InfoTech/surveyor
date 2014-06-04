@@ -10,7 +10,7 @@ module Surveyor
         base.send :has_many, :validations, :dependent => :destroy
         
         # Scopes
-        base.send :default_scope, :order => "display_order ASC"
+        base.send(:default_scope) { base.order("display_order ASC") }
         base.scope :by_question_answer_data_export_identifier, lambda { |survey_id, question_data_export_identifier, answer_data_export_identifier| 
 							base.joins(:question, :question => :survey_section).where(
 							:questions => {:data_export_identifier => question_data_export_identifier}, 

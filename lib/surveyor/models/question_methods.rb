@@ -7,12 +7,12 @@ module Surveyor
         # Associations
         base.send :belongs_to, :survey_section
         base.send :belongs_to, :question_group, :dependent => :destroy
-        base.send :has_many, :answers, :order => "display_order ASC", :dependent => :destroy # it might not always have answers
+        base.send :has_many, :answers, -> { order('display_order ASC') }, :dependent => :destroy # it might not always have answers
         base.send :has_one, :dependency, :dependent => :destroy
         base.send :has_one, :correct_answer, :class_name => "Answer", :dependent => :destroy
 
         # Scopes
-        base.send :default_scope, :order => "display_order ASC"
+        base.send(:default_scope) { base.order("display_order ASC") }
         base.scope :by_survey_id, lambda { |access_code| base.joins(:survey_section).where(:survey_sections => {:survey_id => access_code} )}
         base.scope :by_survey, lambda { |access_code| base.joins(:survey_section => :survey).where(:surveys => {:access_code => access_code} )}
         
