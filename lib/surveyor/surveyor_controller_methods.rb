@@ -113,7 +113,7 @@ module Surveyor
           ids, remove, question_ids = {}, {}, []
           ResponseSet.trim_for_lookups(params[:r]).each do |k,v|
             v[:answer_id].reject!(&:blank?) if v[:answer_id].is_a?(Array)
-            ids[k] = @response_set.responses.find(:first, :conditions => v, :order => "created_at DESC").id if !v.has_key?("id")
+            ids[k] = @response_set.responses.where(v).order("created_at DESC").first.id if !v.has_key?("id")
             remove[k] = v["id"] if v.has_key?("id") && v.has_key?("_destroy")
             question_ids << v["question_id"]
           end
