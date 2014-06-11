@@ -25,9 +25,6 @@ module Surveyor
           @@validations_already_included = true
         end
 
-        # Attributes
-        base.send :attr_protected, :completed_at
-
         # Class methods
         base.instance_eval do
           def to_savable(hash_of_hashes)
