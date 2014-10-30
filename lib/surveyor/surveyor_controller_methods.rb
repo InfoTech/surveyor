@@ -59,6 +59,7 @@ module Surveyor
     end
 
     def update
+      begin
       saved = false
       @errors = []
       ActiveRecord::Base.transaction do
@@ -120,6 +121,9 @@ module Surveyor
 
           render :json => {:errors => @errors, "ids" => ids, "remove" => remove, "correct" => question_ids}.merge(@response_set.reload.all_dependencies(question_ids)).to_json
         end
+      end
+      rescue => e
+        raise e.message
       end
     end
 
