@@ -59,7 +59,6 @@ module Surveyor
     end
 
     def update
-      begin
       saved = false
       @errors = []
       ActiveRecord::Base.transaction do
@@ -81,8 +80,11 @@ module Surveyor
           @errors.each do |error|
             params[:r].reject!{ |k,v| v[:question_id] == error[:question] }
           end
-
-          saved = @response_set.update_attributes(:responses_attributes => ResponseSet.to_savable(params[:r]))
+          begin
+            saved = @response_set.update_attributes(:responses_attributes => ResponseSet.to_savable(params[:r]))
+          rescue => e
+            flash[:errors] = e.message
+          end
           @response_set.complete! if saved && params[:finish] && @errors.empty? && @response_set.mandatory_questions_complete?
           saved &= @response_set.save
         end
@@ -121,9 +123,6 @@ module Surveyor
 
           render :json => {:errors => @errors, "ids" => ids, "remove" => remove, "correct" => question_ids}.merge(@response_set.reload.all_dependencies(question_ids)).to_json
         end
-      end
-      rescue => e
-        raise e.message
       end
     end
 
