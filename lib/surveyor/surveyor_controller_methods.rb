@@ -83,7 +83,7 @@ module Surveyor
           begin
             saved = @response_set.update_attributes(:responses_attributes => ResponseSet.to_savable(params[:r]))
           rescue => e
-            flash[:errors] = e.message
+            flash[:errors] = "Could not update response."
           end
           @response_set.complete! if saved && params[:finish] && @errors.empty? && @response_set.mandatory_questions_complete?
           saved &= @response_set.save
