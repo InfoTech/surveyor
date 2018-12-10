@@ -1,6 +1,6 @@
 require 'formtastic'
 module Formtastic
-  class SurveyorBuilder < SemanticFormBuilder
+  class SurveyorBuilder < FormBuilder
     def quiet_input(method, options = {})
       html_options = options.delete(:input_html) || strip_formtastic_options(options)
       html_options[:id] ||= generate_html_id(method, "")
