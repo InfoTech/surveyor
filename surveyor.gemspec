@@ -21,7 +21,7 @@ Gem::Specification.new do |s|
   s.add_dependency('haml')
   s.add_dependency('sass')
   s.add_dependency('fastercsv', '~> 1.5.4')
-  s.add_dependency('formtastic', '~> 1.2.4')
+  s.add_dependency('formtastic')
   s.add_dependency('uuid')
 
   s.add_development_dependency('yard')
