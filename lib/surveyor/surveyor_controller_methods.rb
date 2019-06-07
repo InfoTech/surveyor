@@ -74,14 +74,14 @@ module Surveyor
             end
           end
 
-          @errors = Response.validate(params[:r], @response_set)
+          @errors = Response.validate(response_params, @response_set)
 
           #Remove know invalid responses from update call, to be handled separately by validation
           @errors.each do |error|
             params[:r].reject!{ |k,v| v[:question_id] == error[:question] }
           end
 
-          saved = @response_set.update_attributes(:responses_attributes => ResponseSet.to_savable(params[:r]))
+          saved = @response_set.update_attributes(:responses_attributes => ResponseSet.to_savable(response_params))
           @response_set.complete! if saved && params[:finish] && @errors.empty? && @response_set.mandatory_questions_complete?
           saved &= @response_set.save
         end
@@ -189,6 +189,10 @@ module Surveyor
       else
         session[:surveyor_javascript] = "not_enabled"
       end
+    end
+
+    def response_params
+      params.require(:r).permit!
     end
     
   end
