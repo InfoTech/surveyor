@@ -1,4 +1,4 @@
-class Dependency < ActiveRecord::Base
+class Dependency < ApplicationRecord
   unloadable
   include Surveyor::Models::DependencyMethods
 end

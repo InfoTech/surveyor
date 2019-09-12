@@ -1,4 +1,4 @@
-class ResponseSet < ActiveRecord::Base
+class ResponseSet < ApplicationRecord
   unloadable
   include Surveyor::Models::ResponseSetMethods
 end

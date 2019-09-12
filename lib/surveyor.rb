@@ -1,5 +1,5 @@
 module Surveyor
-  require 'surveyor/engine' if defined?(Rails) && Rails::VERSION::MAJOR == 4
+  require 'surveyor/engine' if defined?(Rails) && Rails::VERSION::MAJOR == 5
 
   autoload :VERSION, 'surveyor/version'
 end

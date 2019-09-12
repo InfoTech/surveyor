@@ -57,9 +57,9 @@ module Surveyor
 end
 
 # Surveyor models with extra parsing methods
-class Survey < ActiveRecord::Base
+class Survey < ApplicationRecord
 end
-class SurveySection < ActiveRecord::Base
+class SurveySection < ApplicationRecord
   def self.build_or_set(context, r)
     unless context[:survey_section] && context[:survey_section].reference_identifier == r[:form_name]
       if match = context[:survey].sections.detect{|ss| ss.reference_identifier == r[:form_name]}
@@ -73,9 +73,9 @@ class SurveySection < ActiveRecord::Base
     end
   end
 end
-class QuestionGroup < ActiveRecord::Base
+class QuestionGroup < ApplicationRecord
 end
-class Question < ActiveRecord::Base
+class Question < ApplicationRecord
   def self.build_and_set(context, r)
     if !r[:section_header].blank?
       context[:survey_section].questions.build({:display_type => "label", :text => r[:section_header], :display_order => context[:survey_section].questions.size})
@@ -103,7 +103,7 @@ class Question < ActiveRecord::Base
     {"text" => :string, "dropdown" => :dropdown, "notes" => :text}[ft]
   end
 end
-class Dependency < ActiveRecord::Base
+class Dependency < ApplicationRecord
   def self.build_and_set(context, r)
     unless (bl = r[:branching_logic_show_field_only_if]).blank?
       # TODO: forgot to tie rule key to component, counting on the sequence of components
@@ -158,7 +158,7 @@ class Dependency < ActiveRecord::Base
     {:rule => rule, :components => components.flatten}
   end
 end
-class DependencyCondition < ActiveRecord::Base
+class DependencyCondition < ApplicationRecord
   attr_accessor :question_reference, :answer_reference, :lookup_reference
   before_save :resolve_references
   def resolve_references
@@ -177,7 +177,7 @@ class DependencyCondition < ActiveRecord::Base
     end
   end
 end
-class Answer < ActiveRecord::Base
+class Answer < ApplicationRecord
   def self.build_and_set(context, r)
     case r[:field_type]
     when "text"
@@ -203,7 +203,7 @@ class Answer < ActiveRecord::Base
     end
   end
 end
-class Validation < ActiveRecord::Base
+class Validation < ApplicationRecord
   def self.build_and_set(context, r)
     # text_validation_type text_validation_min text_validation_max
     min = r[:text_validation_min].to_s.blank? ? nil : r[:text_validation_min].to_s
@@ -247,5 +247,5 @@ class Validation < ActiveRecord::Base
   end
   
 end
-class ValidationCondition < ActiveRecord::Base
+class ValidationCondition < ApplicationRecord
 end
