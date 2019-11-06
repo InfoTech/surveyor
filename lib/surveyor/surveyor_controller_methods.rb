@@ -62,15 +62,13 @@ module Surveyor
       saved = false
       @errors = []
       ActiveRecord::Base.transaction do
-        @response_set = ResponseSet.includes({:responses => :answer}).lock.find_by_access_code(other_params[:response_set_code])
+        @response_set = ResponseSet.includes(responses: :answer).lock.find_by(access_code: other_params[:response_set_code])
         unless @response_set.blank?
 
-          response_params.each do |res| 
+          response_params.each do |res|
             if res[1][:id].nil?
               answered = Response.find_by_question_id_and_response_set_id(res[1][:question_id], @response_set.id)
-              if answered.present?
-                res[1][:id] = answered[:id]
-              end
+              res[1][:id] = answered[:id] if answered.present?
             end
           end
 
@@ -78,7 +76,7 @@ module Surveyor
 
           # Remove know invalid responses from update call, to be handled separately by validation
           @errors.each do |error|
-            response_params.reject!{ |k,v| v[:question_id] == error[:question] }
+            response_params.reject! { |_, v| v[:question_id] == error[:question] }
           end
           saved = @response_set.update_attribute(:responses_attributes, ResponseSet.to_savable(response_params))
           @response_set.complete! if saved && other_params[:finish] && @errors.empty? && @response_set.mandatory_questions_complete?
@@ -97,7 +95,7 @@ module Surveyor
         format.html do
           unless @errors.empty? || returning_to_previous_section?(other_params[:current_section], other_params[:section])
             flash[:validation_errors] = @errors
-            redirect_with_message(request.referrer, :error, t('surveyor.incomplete_section')) and return
+            return redirect_with_message(request.referrer, :error, t('surveyor.incomplete_section'))
           end
 
           if @response_set.blank?
@@ -191,7 +189,7 @@ module Surveyor
     end
 
     def response_params
-      @response_params = params.require(:r).permit!.to_h
+      @response_params ||= params.require(:r).permit!.to_h
     end
 
     def other_params
