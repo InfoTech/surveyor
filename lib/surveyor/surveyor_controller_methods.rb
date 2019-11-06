@@ -80,7 +80,7 @@ module Surveyor
           @errors.each do |error|
             response_params.reject!{ |k,v| v[:question_id] == error[:question] }
           end
-          saved = @response_set.update_attributes(:responses_attributes => ResponseSet.to_savable(response_params))
+          saved = @response_set.update_attribute(:responses_attributes, ResponseSet.to_savable(response_params))
           @response_set.complete! if saved && other_params[:finish] && @errors.empty? && @response_set.mandatory_questions_complete?
           saved &= @response_set.save
         end
@@ -95,7 +95,6 @@ module Surveyor
 
       respond_to do |format|
         format.html do
-          byebug
           unless @errors.empty? || returning_to_previous_section?(other_params[:current_section], other_params[:section])
             flash[:validation_errors] = @errors
             redirect_with_message(request.referrer, :error, t('surveyor.incomplete_section')) and return
