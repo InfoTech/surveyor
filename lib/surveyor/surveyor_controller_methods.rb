@@ -140,6 +140,7 @@ module Surveyor
     def surveyor_index
       available_surveys_path
     end
+
     def surveyor_finish
       available_surveys_path
     end
