@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
 
-  s.add_dependency('rails', '5.0')
+  s.add_dependency('rails', '~> 5.0')
   s.add_dependency('haml')
   s.add_dependency('sass')
   s.add_dependency('fastercsv', '~> 1.5.4')
