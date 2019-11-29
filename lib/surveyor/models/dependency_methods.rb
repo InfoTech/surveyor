@@ -3,8 +3,8 @@ module Surveyor
     module DependencyMethods
       def self.included(base)
         # Associations
-        base.send :belongs_to, :question
-        base.send :belongs_to, :question_group
+        base.send :belongs_to, :question, optional: true
+        base.send :belongs_to, :question_group, optional: true
         base.send :has_many, :dependency_conditions, :dependent => :destroy
         
         @@validations_already_included ||= nil

@@ -5,8 +5,8 @@ module Surveyor
     module QuestionMethods
       def self.included(base)
         # Associations
-        base.send :belongs_to, :survey_section
-        base.send :belongs_to, :question_group, :dependent => :destroy
+        base.send :belongs_to, :survey_section, optional: true
+        base.send :belongs_to, :question_group, dependent: :destroy, optional: true
         base.send :has_many, :answers, -> { order('display_order ASC') }, :dependent => :destroy # it might not always have answers
         base.send :has_one, :dependency, :dependent => :destroy
         base.send :has_one, :correct_answer, :class_name => "Answer", :dependent => :destroy

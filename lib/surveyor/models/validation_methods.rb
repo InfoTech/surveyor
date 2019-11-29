@@ -3,7 +3,7 @@ module Surveyor
     module ValidationMethods
       def self.included(base)
         # Associations
-        base.send :belongs_to, :answer
+        base.send :belongs_to, :answer, optional: true
         base.send :has_many, :validation_conditions, :dependent => :destroy
 
         # Scopes

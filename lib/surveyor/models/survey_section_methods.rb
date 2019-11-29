@@ -4,7 +4,7 @@ module Surveyor
       def self.included(base)
         # Associations
         base.send :has_many, :questions, -> { order('display_order ASC') }, :dependent => :destroy
-        base.send :belongs_to, :survey
+        base.send :belongs_to, :survey, optional: true
 
         # Scopes
         base.send(:default_scope) { base.order("display_order ASC") }

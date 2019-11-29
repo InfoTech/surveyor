@@ -5,7 +5,7 @@ module Surveyor
     module AnswerMethods
       def self.included(base)
         # Associations
-        base.send :belongs_to, :question
+        base.send :belongs_to, :question, optional: true
         base.send :has_many, :responses
         base.send :has_many, :validations, :dependent => :destroy
         

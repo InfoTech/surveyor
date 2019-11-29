@@ -3,9 +3,9 @@ module Surveyor
     module ResponseMethods
       def self.included(base)
         # Associations
-        base.send :belongs_to, :response_set
-        base.send :belongs_to, :question
-        base.send :belongs_to, :answer
+        base.send :belongs_to, :response_set, optional: true
+        base.send :belongs_to, :question, optional: true
+        base.send :belongs_to, :answer, optional: true
         @@validations_already_included ||= nil
         unless @@validations_already_included
           # Validations

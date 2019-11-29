@@ -5,8 +5,8 @@ module Surveyor
     module ResponseSetMethods
       def self.included(base)
         # Associations
-        base.send :belongs_to, :survey
-        base.send :belongs_to, :user
+        base.send :belongs_to, :survey, optional: true
+        base.send :belongs_to, :user, optional: true
         base.send :has_many, :responses, :dependent => :destroy
         base.send :accepts_nested_attributes_for, :responses, :allow_destroy => true
         
