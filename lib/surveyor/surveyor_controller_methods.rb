@@ -75,12 +75,10 @@ module Surveyor
           @errors = Response.validate(response_params, @response_set)
 
           #Remove know invalid responses from update call, to be handled separately by validation
-          valid_response_params = {}
           @errors.each do |error|
-            valid_response_params = response_params.reject!{ |k,v| v[:question_id] == error[:question] }
+            response_params.reject!{ |k,v| v[:question_id] == error[:question] }
           end
-
-          saved = @response_set.update_attribute(:responses_attributes, ResponseSet.to_savable(valid_response_params))
+          saved = @response_set.update_attribute(:responses_attributes, ResponseSet.to_savable(response_params))
           @response_set.complete! if saved && survey_params[:finish] && @errors.empty? && @response_set.mandatory_questions_complete?
           saved &= @response_set.save
         end
@@ -110,7 +108,7 @@ module Surveyor
 
         format.js do
           ids, remove, question_ids = {}, {}, []
-          ResponseSet.trim_for_lookups(valid_response_params).each do |k,v|
+          ResponseSet.trim_for_lookups(response_params).each do |k,v|
             v[:answer_id].reject!(&:blank?) if v[:answer_id].is_a?(Array)
             ids[k] = @response_set.responses.where(v).order("created_at DESC").first.id if !v.has_key?("id")
             remove[k] = v["id"] if v.has_key?("id") && v.has_key?("_destroy")
