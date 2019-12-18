@@ -14,7 +14,7 @@ module Surveyor
     end
 
     def create
-      @survey = Survey.find_by_access_code(other_params[:survey_code])
+      @survey = Survey.find_by_access_code(survey_params[:survey_code])
       @response_set = ResponseSet.find_by_survey_id_and_user_id(@survey.id, @current_user.id) unless @current_user.nil? || @survey.nil?
       @response_set ||= ResponseSet.create(:survey => @survey, :user_id => (@current_user.nil? ? @current_user : @current_user.id))
       if (@survey && @response_set)
@@ -26,7 +26,7 @@ module Surveyor
     end
 
     def show
-      @response_set = ResponseSet.find_by_access_code(other_params[:response_set_code], :include => {:responses => [:question, :answer]})
+      @response_set = ResponseSet.find_by_access_code(survey_params[:response_set_code], :include => {:responses => [:question, :answer]})
       if @response_set
         @survey = @response_set.survey
         respond_to do |format|
@@ -42,12 +42,12 @@ module Surveyor
     end
 
     def edit
-      @response_set = ResponseSet.includes({:responses => [:question, :answer]}).find_by_access_code(other_params[:response_set_code])
+      @response_set = ResponseSet.includes({:responses => [:question, :answer]}).find_by_access_code(survey_params[:response_set_code])
       if @response_set
         @survey = Survey.with_sections.find_by_id(@response_set.survey_id)
         @sections = @survey.sections
-        if other_params[:section]
-          @section = @sections.with_includes.find(section_id_from(other_params[:section])) || @sections.with_includes.first
+        if survey_params[:section]
+          @section = @sections.with_includes.find(section_id_from(survey_params[:section])) || @sections.with_includes.first
         else
           @section = @sections.with_includes.first
         end
@@ -62,7 +62,7 @@ module Surveyor
       saved = false
       @errors = []
       ActiveRecord::Base.transaction do
-        @response_set = ResponseSet.includes(responses: :answer).lock.find_by(access_code: other_params[:response_set_code])
+        @response_set = ResponseSet.includes(responses: :answer).lock.find_by(access_code: survey_params[:response_set_code])
         unless @response_set.blank?
 
           response_params.each do |res|
@@ -81,12 +81,12 @@ module Surveyor
           end
 
           saved = @response_set.update_attribute(:responses_attributes, ResponseSet.to_savable(valid_response_params))
-          @response_set.complete! if saved && other_params[:finish] && @errors.empty? && @response_set.mandatory_questions_complete?
+          @response_set.complete! if saved && survey_params[:finish] && @errors.empty? && @response_set.mandatory_questions_complete?
           saved &= @response_set.save
         end
       end
 
-      if saved && other_params[:finish].present?
+      if saved && survey_params[:finish].present?
         return redirect_with_message(surveyor_finish, :success, t('surveyor.completed_survey')) if @errors.empty?
 
         flash[:validation_errors] = @errors
@@ -95,7 +95,7 @@ module Surveyor
 
       respond_to do |format|
         format.html do
-          unless @errors.empty? || returning_to_previous_section?(other_params[:current_section], other_params[:section])
+          unless @errors.empty? || returning_to_previous_section?(survey_params[:current_section], survey_params[:section])
             flash[:validation_errors] = @errors
             return redirect_with_message(request.referrer, :error, t('surveyor.incomplete_section'))
           end
@@ -104,7 +104,7 @@ module Surveyor
             return redirect_with_message(available_surveys_path, :notice, t('surveyor.unable_to_find_your_responses'))
           else
             flash[:notice] = t('surveyor.unable_to_update_survey') unless saved
-            redirect_to edit_my_survey_path(:anchor => anchor_from(other_params[:section]), :section => section_id_from(other_params[:section]))
+            redirect_to edit_my_survey_path(:anchor => anchor_from(survey_params[:section]), :section => section_id_from(survey_params[:section]))
           end
         end
 
@@ -130,7 +130,7 @@ module Surveyor
     end
 
     # Params: the name of some submit buttons store the section we'd like to go to. for repeater questions, an anchor to the repeater group is also stored
-    # e.g. other_params[:section] = {"1"=>{"question_group_1"=>"<= add row"}}
+    # e.g. survey_params[:section] = {"1"=>{"question_group_1"=>"<= add row"}}
     def section_id_from(p)
       p.respond_to?(:keys) ? p.keys.first : p
     end
@@ -184,7 +184,7 @@ module Surveyor
     # cf. surveyor/edit.html.haml
     # the set the session variable [:surveyor_javascript] to "enabled"
     def determine_if_javascript_is_enabled
-      if other_params[:surveyor_javascript_enabled] && other_params[:surveyor_javascript_enabled].to_s == "true"
+      if survey_params[:surveyor_javascript_enabled] && survey_params[:surveyor_javascript_enabled].to_s == "true"
         session[:surveyor_javascript] = "enabled"
       else
         session[:surveyor_javascript] = "not_enabled"
@@ -195,9 +195,7 @@ module Surveyor
       @response_params ||= params.require(:r).permit!.to_h
     end
 
-    def other_params
-      # params.permit(:survey_code, :response_set_code, :current_section, :finish, :surveyor_javascript_enabled, :utf8, :_method, :authenticity_token, r: {}, section: {}).to_h
-      # for some reason the above permitted params don't permit :section, and :r properly....somehow, so fuck it:
+    def survey_params
       params.permit!
     end
   end
