@@ -62,15 +62,13 @@ module Surveyor
       saved = false
       @errors = []
       ActiveRecord::Base.transaction do
-        @response_set = ResponseSet.includes({:responses => :answer}).lock.find_by_access_code(other_params[:response_set_code])
+        @response_set = ResponseSet.includes(responses: :answer).lock.find_by(access_code: other_params[:response_set_code])
         unless @response_set.blank?
 
-          response_params.each do |res| 
+          response_params.each do |res|
             if res[1][:id].nil?
               answered = Response.find_by_question_id_and_response_set_id(res[1][:question_id], @response_set.id)
-              if answered.present?
-                res[1][:id] = answered[:id]
-              end
+              res[1][:id] = answered[:id] if answered.present?
             end
           end
 
@@ -82,7 +80,7 @@ module Surveyor
             valid_response_params = response_params.reject!{ |k,v| v[:question_id] == error[:question] }
           end
 
-          saved = @response_set.update_attributes(:responses_attributes => ResponseSet.to_savable(valid_response_params))
+          saved = @response_set.update_attribute(:responses_attributes, ResponseSet.to_savable(valid_response_params))
           @response_set.complete! if saved && other_params[:finish] && @errors.empty? && @response_set.mandatory_questions_complete?
           saved &= @response_set.save
         end
@@ -109,7 +107,7 @@ module Surveyor
             redirect_to edit_my_survey_path(:anchor => anchor_from(other_params[:section]), :section => section_id_from(other_params[:section]))
           end
         end
-        
+
         format.js do
           ids, remove, question_ids = {}, {}, []
           ResponseSet.trim_for_lookups(valid_response_params).each do |k,v|
@@ -144,6 +142,7 @@ module Surveyor
     def surveyor_index
       available_surveys_path
     end
+
     def surveyor_finish
       available_surveys_path
     end
@@ -175,11 +174,11 @@ module Surveyor
         @dependents = get_unanswered_dependencies_minus_section_questions
       end
     end
-    
+
     def get_unanswered_dependencies_minus_section_questions
       @response_set.unanswered_dependencies - @section.questions || []
     end
-    
+
     ##
     # If the hidden field surveyor_javascript_enabled is set to true
     # cf. surveyor/edit.html.haml
@@ -193,9 +192,9 @@ module Surveyor
     end
 
     def response_params
-      @response_params = params.require(:r).permit!.to_h
+      @response_params ||= params.require(:r).permit!.to_h
     end
-    
+
     def other_params
       # params.permit(:survey_code, :response_set_code, :current_section, :finish, :surveyor_javascript_enabled, :utf8, :_method, :authenticity_token, r: {}, section: {}).to_h
       # for some reason the above permitted params don't permit :section, and :r properly....somehow, so fuck it:
