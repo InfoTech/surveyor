@@ -77,28 +77,29 @@ module Surveyor
           @errors = Response.validate(response_params, @response_set)
 
           #Remove know invalid responses from update call, to be handled separately by validation
+          valid_response_params = {}
           @errors.each do |error|
-            response_params.reject!{ |k,v| v[:question_id] == error[:question] }
+            valid_response_params = response_params.reject!{ |k,v| v[:question_id] == error[:question] }
           end
 
-          saved = @response_set.update_attributes(:responses_attributes => ResponseSet.to_savable(response_params))
+          saved = @response_set.update_attributes(:responses_attributes => ResponseSet.to_savable(valid_response_params))
           @response_set.complete! if saved && other_params[:finish] && @errors.empty? && @response_set.mandatory_questions_complete?
           saved &= @response_set.save
         end
       end
-      
-      if saved && other_params[:finish]
-				return redirect_with_message(surveyor_finish, :success, t('surveyor.completed_survey')) if @errors.empty?
+
+      if saved && other_params[:finish].present?
+        return redirect_with_message(surveyor_finish, :success, t('surveyor.completed_survey')) if @errors.empty?
 
         flash[:validation_errors] = @errors
-        redirect_with_message(request.referrer, :error, t('surveyor.incomplete_section')) and return
+        return redirect_with_message(request.referrer, :error, t('surveyor.incomplete_section'))
       end
 
       respond_to do |format|
         format.html do
           unless @errors.empty? || returning_to_previous_section?(other_params[:current_section], other_params[:section])
             flash[:validation_errors] = @errors
-            redirect_with_message(request.referrer, :error, t('surveyor.incomplete_section')) and return
+            return redirect_with_message(request.referrer, :error, t('surveyor.incomplete_section'))
           end
 
           if @response_set.blank?
@@ -111,7 +112,7 @@ module Surveyor
         
         format.js do
           ids, remove, question_ids = {}, {}, []
-          ResponseSet.trim_for_lookups(response_params).each do |k,v|
+          ResponseSet.trim_for_lookups(valid_response_params).each do |k,v|
             v[:answer_id].reject!(&:blank?) if v[:answer_id].is_a?(Array)
             ids[k] = @response_set.responses.where(v).order("created_at DESC").first.id if !v.has_key?("id")
             remove[k] = v["id"] if v.has_key?("id") && v.has_key?("_destroy")
