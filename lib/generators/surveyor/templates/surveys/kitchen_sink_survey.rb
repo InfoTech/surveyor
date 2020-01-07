@@ -1,5 +1,3 @@
-# include Surveyor
-
 # survey "Kitchen Sink survey" do
 
 #   section "Basic questions" do
