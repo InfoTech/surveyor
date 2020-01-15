@@ -30,7 +30,7 @@ module SurveyorControllerCustomMethods
   end
   def surveyor_finish
     # the update action redirects to this method if given params[:finish]
-    super # available_surveys_path
+    super # results_path
   end
 end
 class SurveyorController < ApplicationController
