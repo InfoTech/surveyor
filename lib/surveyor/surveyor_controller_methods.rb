@@ -3,7 +3,7 @@ module Surveyor
     def self.included(base)
       base.send :before_action, :get_current_user, only: [:new, :create]
       base.send :before_action, :determine_if_javascript_is_enabled, only: [:create, :update]
-      base.send :layout, 'surveyor_default'
+      # base.send :layout, 'surveyor_default'
     end
 
     # Actions
