@@ -142,8 +142,7 @@ module Surveyor
     end
 
     def surveyor_finish
-      # available_surveys_path
-      results_path
+      available_surveys_path
     end
 
     def redirect_with_message(path, message_type, message)
