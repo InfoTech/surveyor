@@ -20,7 +20,7 @@ module Surveyor
         # Class methods
         base.instance_eval do
           def applicable_attributes(attrs)
-            result = HashWithIndifferentAccess.new(attrs)
+            result = ActiveSupport::HashWithIndifferentAccess.new(attrs)
             answer_id = result[:answer_id].is_a?(Array) ? result[:answer_id].last : result[:answer_id] # checkboxes are arrays / radio buttons are not arrays
             if result[:string_value] && !answer_id.blank? && Answer.exists?(answer_id)
               answer = Answer.find(answer_id)
@@ -29,7 +29,7 @@ module Surveyor
             result
           end
 
-          def validate(hash_of_hashes, response_set)
+          def validate_group(hash_of_hashes, response_set)
             invalid = []
             (hash_of_hashes || {}).each_pair do |k, hash|
               response = Response.new(hash.merge(response_set: response_set))

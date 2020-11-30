@@ -72,7 +72,7 @@ module Surveyor
             end
           end
 
-          @errors = Response.validate(response_params, @response_set)
+          @errors = Response.validate_group(response_params, @response_set)
 
           # Remove know invalid responses from update call, to be handled separately by validation
           @errors.each do |error|
