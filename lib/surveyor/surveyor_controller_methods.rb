@@ -1,8 +1,8 @@
 module Surveyor
   module SurveyorControllerMethods
     def self.included(base)
-      base.send :before_filter, :get_current_user, :only => [:new, :create]
-      base.send :before_filter, :determine_if_javascript_is_enabled, :only => [:create, :update]
+      base.send :before_action, :get_current_user, only: [:new, :create]
+      base.send :before_action, :determine_if_javascript_is_enabled, only: [:create, :update]
       base.send :layout, 'surveyor_default'
     end
 
@@ -14,7 +14,7 @@ module Surveyor
     end
 
     def create
-      @survey = Survey.find_by_access_code(params[:survey_code])
+      @survey = Survey.find_by_access_code(other_params[:survey_code])
       @response_set = ResponseSet.find_by_survey_id_and_user_id(@survey.id, @current_user.id) unless @current_user.nil? || @survey.nil?
       @response_set ||= ResponseSet.create(:survey => @survey, :user_id => (@current_user.nil? ? @current_user : @current_user.id))
       if (@survey && @response_set)
@@ -26,7 +26,7 @@ module Surveyor
     end
 
     def show
-      @response_set = ResponseSet.find_by_access_code(params[:response_set_code], :include => {:responses => [:question, :answer]})
+      @response_set = ResponseSet.find_by_access_code(other_params[:response_set_code], :include => {:responses => [:question, :answer]})
       if @response_set
         @survey = @response_set.survey
         respond_to do |format|
@@ -42,12 +42,12 @@ module Surveyor
     end
 
     def edit
-      @response_set = ResponseSet.includes({:responses => [:question, :answer]}).find_by_access_code(params[:response_set_code])
+      @response_set = ResponseSet.includes({:responses => [:question, :answer]}).find_by_access_code(other_params[:response_set_code])
       if @response_set
         @survey = Survey.with_sections.find_by_id(@response_set.survey_id)
         @sections = @survey.sections
-        if params[:section]
-          @section = @sections.with_includes.find(section_id_from(params[:section])) || @sections.with_includes.first
+        if other_params[:section]
+          @section = @sections.with_includes.find(section_id_from(other_params[:section])) || @sections.with_includes.first
         else
           @section = @sections.with_includes.first
         end
@@ -62,56 +62,53 @@ module Surveyor
       saved = false
       @errors = []
       ActiveRecord::Base.transaction do
-        @response_set = ResponseSet.includes({:responses => :answer}).lock.find_by_access_code(params[:response_set_code])
+        @response_set = ResponseSet.includes(responses: :answer).lock.find_by(access_code: other_params[:response_set_code])
         unless @response_set.blank?
 
-          params[:r].each do |res| 
+          response_params.each do |res|
             if res[1][:id].nil?
               answered = Response.find_by_question_id_and_response_set_id(res[1][:question_id], @response_set.id)
-              if answered.present?
-                res[1][:id] = answered[:id]
-              end
+              res[1][:id] = answered[:id] if answered.present?
             end
           end
 
-          @errors = Response.validate(response_params, @response_set)
+          @errors = Response.validate_group(response_params, @response_set)
 
-          #Remove know invalid responses from update call, to be handled separately by validation
+          # Remove know invalid responses from update call, to be handled separately by validation
           @errors.each do |error|
-            params[:r].reject!{ |k,v| v[:question_id] == error[:question] }
+            response_params.reject! { |_, v| v[:question_id] == error[:question] }
           end
-
-          saved = @response_set.update_attributes(:responses_attributes => ResponseSet.to_savable(response_params))
-          @response_set.complete! if saved && params[:finish] && @errors.empty? && @response_set.mandatory_questions_complete?
+          saved = @response_set.update_attribute(:responses_attributes, ResponseSet.to_savable(response_params))
+          @response_set.complete! if saved && other_params[:finish] && @errors.empty? && @response_set.mandatory_questions_complete?
           saved &= @response_set.save
         end
       end
-      
-      if saved && params[:finish]
-				return redirect_with_message(surveyor_finish, :success, t('surveyor.completed_survey')) if @errors.empty?
+
+      if saved && other_params[:finish]
+        return redirect_with_message(surveyor_finish, :success, t('surveyor.completed_survey')) if @errors.empty?
 
         flash[:validation_errors] = @errors
-        redirect_with_message(request.referrer, :error, t('surveyor.incomplete_section')) and return
+        return redirect_with_message(request.referrer, :error, t('surveyor.incomplete_section'))
       end
 
       respond_to do |format|
         format.html do
-          unless @errors.empty? || returning_to_previous_section?(params[:current_section], params[:section])
+          unless @errors.empty? || returning_to_previous_section?(other_params[:current_section], other_params[:section])
             flash[:validation_errors] = @errors
-            redirect_with_message(request.referrer, :error, t('surveyor.incomplete_section')) and return
+            return redirect_with_message(request.referrer, :error, t('surveyor.incomplete_section'))
           end
 
           if @response_set.blank?
             return redirect_with_message(available_surveys_path, :notice, t('surveyor.unable_to_find_your_responses'))
           else
             flash[:notice] = t('surveyor.unable_to_update_survey') unless saved
-            redirect_to edit_my_survey_path(:anchor => anchor_from(params[:section]), :section => section_id_from(params[:section]))
+            redirect_to edit_my_survey_path(:anchor => anchor_from(other_params[:section]), :section => section_id_from(other_params[:section]))
           end
         end
-        
+
         format.js do
           ids, remove, question_ids = {}, {}, []
-          ResponseSet.trim_for_lookups(params[:r]).each do |k,v|
+          ResponseSet.trim_for_lookups(response_params).each do |k,v|
             v[:answer_id].reject!(&:blank?) if v[:answer_id].is_a?(Array)
             ids[k] = @response_set.responses.where(v).order("created_at DESC").first.id if !v.has_key?("id")
             remove[k] = v["id"] if v.has_key?("id") && v.has_key?("_destroy")
@@ -131,7 +128,7 @@ module Surveyor
     end
 
     # Params: the name of some submit buttons store the section we'd like to go to. for repeater questions, an anchor to the repeater group is also stored
-    # e.g. params[:section] = {"1"=>{"question_group_1"=>"<= add row"}}
+    # e.g. other_params[:section] = {"1"=>{"question_group_1"=>"<= add row"}}
     def section_id_from(p)
       p.respond_to?(:keys) ? p.keys.first : p
     end
@@ -143,6 +140,7 @@ module Surveyor
     def surveyor_index
       available_surveys_path
     end
+
     def surveyor_finish
       available_surveys_path
     end
@@ -174,17 +172,17 @@ module Surveyor
         @dependents = get_unanswered_dependencies_minus_section_questions
       end
     end
-    
+
     def get_unanswered_dependencies_minus_section_questions
       @response_set.unanswered_dependencies - @section.questions || []
     end
-    
+
     ##
     # If the hidden field surveyor_javascript_enabled is set to true
     # cf. surveyor/edit.html.haml
     # the set the session variable [:surveyor_javascript] to "enabled"
     def determine_if_javascript_is_enabled
-      if params[:surveyor_javascript_enabled] && params[:surveyor_javascript_enabled].to_s == "true"
+      if other_params[:surveyor_javascript_enabled] && other_params[:surveyor_javascript_enabled].to_s == "true"
         session[:surveyor_javascript] = "enabled"
       else
         session[:surveyor_javascript] = "not_enabled"
@@ -192,8 +190,13 @@ module Surveyor
     end
 
     def response_params
-      params.require(:r).permit!
+      @response_params ||= params.require(:r).permit!.to_h
     end
-    
+
+    def other_params
+      # params.permit(:survey_code, :response_set_code, :current_section, :finish, :surveyor_javascript_enabled, :utf8, :_method, :authenticity_token, r: {}, section: {}).to_h
+      # for some reason the above permitted params don't permit :section, and :r properly....somehow, so fuck it:
+      params.permit!
+    end
   end
 end

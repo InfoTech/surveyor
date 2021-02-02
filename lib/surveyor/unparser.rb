@@ -10,7 +10,7 @@ module Surveyor
 end
 
 # Surveyor models with extra parsing methods
-class Survey < ActiveRecord::Base
+class Survey < ApplicationRecord
   # block
 
   def unparse(dsl)
@@ -21,7 +21,7 @@ class Survey < ActiveRecord::Base
     dsl << "end\n"
   end
 end
-class SurveySection < ActiveRecord::Base
+class SurveySection < ApplicationRecord
   # block
 
   def unparse(dsl)
@@ -44,7 +44,7 @@ class SurveySection < ActiveRecord::Base
     dsl << "  end\n"
   end
 end
-class QuestionGroup < ActiveRecord::Base
+class QuestionGroup < ApplicationRecord
   # block
 
   def unparse(dsl)
@@ -58,7 +58,7 @@ class QuestionGroup < ActiveRecord::Base
     dsl << "    end\n"
   end
 end
-class Question < ActiveRecord::Base
+class Question < ApplicationRecord
   # nonblock
 
   def unparse(dsl)
@@ -78,7 +78,7 @@ class Question < ActiveRecord::Base
     dependency.unparse(dsl) if dependency
   end
 end
-class Dependency < ActiveRecord::Base
+class Dependency < ApplicationRecord
   # nonblock
 
   def unparse(dsl)
@@ -89,7 +89,7 @@ class Dependency < ActiveRecord::Base
     dependency_conditions.each{|dependency_condition| dependency_condition.unparse(dsl)}
   end
 end
-class DependencyCondition < ActiveRecord::Base
+class DependencyCondition < ApplicationRecord
   # nonblock
 
   def unparse(dsl)
@@ -101,7 +101,7 @@ class DependencyCondition < ActiveRecord::Base
     dsl << (attrs.blank? ? ", {:answer_reference=>\"#{answer && answer.reference_identifier}\"}\n" : ", {#{attrs.inspect.gsub(/\{|\}/, "")}, :answer_reference=>\"#{answer && answer.reference_identifier}\"}\n")
   end  
 end
-class Answer < ActiveRecord::Base
+class Answer < ApplicationRecord
   # nonblock
 
   def unparse(dsl)
@@ -122,7 +122,7 @@ class Answer < ActiveRecord::Base
     validations.each{|validation| validation.unparse(dsl)}
   end
 end
-class Validation < ActiveRecord::Base
+class Validation < ApplicationRecord
   # nonblock
 
   def unparse(dsl)
@@ -133,7 +133,7 @@ class Validation < ActiveRecord::Base
     validation_conditions.each{|validation_condition| validation_condition.unparse(dsl)}
   end
 end
-class ValidationCondition < ActiveRecord::Base
+class ValidationCondition < ApplicationRecord
   # nonblock
 
   def unparse(dsl)

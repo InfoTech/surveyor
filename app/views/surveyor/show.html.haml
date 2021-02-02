@@ -1,6 +1,6 @@
 #surveyor
   - @survey.sections.each do |section|
-    - div_for section do
+    .div{ class: 'section' }
       %h1= section.title
       .questions
         - group_questions ||= []

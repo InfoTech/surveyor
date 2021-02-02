@@ -3,10 +3,10 @@ module Surveyor
     module DependencyConditionMethods
       def self.included(base)
         # Associations
-        base.send :belongs_to, :answer
-        base.send :belongs_to, :dependency
-        base.send :belongs_to, :dependent_question, :foreign_key => :question_id, :class_name => :question
-        base.send :belongs_to, :question
+        base.send :belongs_to, :answer, optional: true
+        base.send :belongs_to, :dependency, optional: true
+        base.send :belongs_to, :dependent_question, foreign_key: :question_id, class_name: :question, optional: true
+        base.send :belongs_to, :question, optional: true
         
         @@validations_already_included ||= nil
         unless @@validations_already_included

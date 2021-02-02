@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
 
-  s.add_dependency('rails', '4.2.10')
+  s.add_dependency('rails', '~> 5.1')
   s.add_dependency('haml')
   s.add_dependency('sass')
   s.add_dependency('fastercsv', '~> 1.5.4')
@@ -27,7 +27,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency('yard')
   s.add_development_dependency('rake', '0.8.7')
   s.add_development_dependency('rspec-rails')
-  s.add_development_dependency('bundler', '~> 1.0', '>= 1.0.21')
+  s.add_development_dependency('bundler', '1.17.3')
   s.add_development_dependency('factory_girl', '~> 2.1.2')
   s.add_development_dependency('sqlite3')
   s.add_development_dependency('cucumber-rails')

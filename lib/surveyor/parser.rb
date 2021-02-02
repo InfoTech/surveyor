@@ -68,7 +68,7 @@ module Surveyor
 end
 
 # Surveyor models with extra parsing methods
-class Survey < ActiveRecord::Base
+class Survey < ApplicationRecord
   # block
   
   def self.parse_and_build(context, args, original_method, reference_identifier)
@@ -88,7 +88,7 @@ class Survey < ActiveRecord::Base
     context[:answer_references] = {}
   end
 end
-class SurveySection < ActiveRecord::Base
+class SurveySection < ApplicationRecord
   # block
   
   def self.parse_and_build(context, args, original_method, reference_identifier)
@@ -104,7 +104,7 @@ class SurveySection < ActiveRecord::Base
     context.delete_if{|k,v| !%w(survey question_references answer_references).map(&:to_sym).include?(k)}
   end
 end
-class QuestionGroup < ActiveRecord::Base
+class QuestionGroup < ApplicationRecord
   # block
   
   def self.parse_and_build(context, args, original_method, reference_identifier)
@@ -120,7 +120,7 @@ class QuestionGroup < ActiveRecord::Base
     context.delete_if{|k,v| !%w(survey survey_section question_references answer_references).map(&:to_sym).include?(k)}
   end
 end
-class Question < ActiveRecord::Base
+class Question < ApplicationRecord
   # nonblock
   
   # attributes
@@ -162,7 +162,7 @@ class Question < ActiveRecord::Base
     end
   end
 end
-class Dependency < ActiveRecord::Base
+class Dependency < ApplicationRecord
   # nonblock
   
   def self.parse_and_build(context, args, original_method, reference_identifier)
@@ -177,7 +177,7 @@ class Dependency < ActiveRecord::Base
     end
   end
 end
-class DependencyCondition < ActiveRecord::Base
+class DependencyCondition < ApplicationRecord
   # nonblock
   
   attr_accessor :question_reference, :answer_reference, :context_reference
@@ -213,7 +213,7 @@ class DependencyCondition < ActiveRecord::Base
   end
 end
 
-class Answer < ActiveRecord::Base
+class Answer < ApplicationRecord
   # nonblock
   
   def self.parse_and_build(context, args, original_method, reference_identifier)
@@ -264,7 +264,7 @@ class Answer < ActiveRecord::Base
     end
   end
 end
-class Validation < ActiveRecord::Base
+class Validation < ApplicationRecord
   # nonblock
   
   def self.parse_and_build(context, args, original_method, reference_identifier)
@@ -275,7 +275,7 @@ class Validation < ActiveRecord::Base
     context[:validation] = context[:answer].validations.build({:rule => "A"}.merge(args[0] || {}))
   end
 end
-class ValidationCondition < ActiveRecord::Base
+class ValidationCondition < ApplicationRecord
   # nonblock
   
   def self.parse_and_build(context, args, original_method, reference_identifier)

@@ -3,15 +3,15 @@ module Surveyor
     module ResponseMethods
       def self.included(base)
         # Associations
-        base.send :belongs_to, :response_set
-        base.send :belongs_to, :question
-        base.send :belongs_to, :answer
+        base.send :belongs_to, :response_set, optional: true
+        base.send :belongs_to, :question, optional: true
+        base.send :belongs_to, :answer, optional: true
         @@validations_already_included ||= nil
         unless @@validations_already_included
           # Validations
           base.send :validates_presence_of, :response_set_id, :question_id, :answer_id
-          base.send :validates, :float_value, :numericality => { :only_float => true, :message => "^Please enter a numeric value."}, :if => "validate?(%w[float])"
-          base.send :validates, :integer_value, :numericality => { :only_integer => true, :message => "^Please enter a numeric value." }, :if => "validate?(%w[integer])"
+          base.send :validates, :float_value, numericality: { only_float: true, message: "^Please enter a numeric value."}, if: -> { validate?(%w[float]) }
+          base.send :validates, :integer_value, numericality: { only_integer: true, message: "^Please enter a numeric value." }, if: -> { validate?(%w[integer]) }
           
           @@validations_already_included = true
         end
@@ -20,7 +20,7 @@ module Surveyor
         # Class methods
         base.instance_eval do
           def applicable_attributes(attrs)
-            result = HashWithIndifferentAccess.new(attrs)
+            result = ActiveSupport::HashWithIndifferentAccess.new(attrs)
             answer_id = result[:answer_id].is_a?(Array) ? result[:answer_id].last : result[:answer_id] # checkboxes are arrays / radio buttons are not arrays
             if result[:string_value] && !answer_id.blank? && Answer.exists?(answer_id)
               answer = Answer.find(answer_id)
@@ -29,11 +29,11 @@ module Surveyor
             result
           end
 
-          def validate(hash_of_hashes, response_set)
+          def validate_group(hash_of_hashes, response_set)
             invalid = []
             (hash_of_hashes || {}).each_pair do |k, hash|
-              response = Response.new(hash.merge(:response_set => response_set))
-              invalid << {:question => hash['question_id'], :message => response.errors.full_messages} unless response.valid?
+              response = Response.new(hash.merge(response_set: response_set))
+              invalid << {question: hash['question_id'], message: response.errors.full_messages} unless response.valid?
             end
             invalid
           end

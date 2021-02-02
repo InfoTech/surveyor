@@ -1,4 +1,4 @@
-class ValidationCondition < ActiveRecord::Base
+class ValidationCondition < ApplicationRecord
   unloadable
   include Surveyor::Models::ValidationConditionMethods
 end
